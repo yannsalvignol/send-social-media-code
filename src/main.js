@@ -14,18 +14,31 @@ export default async ({ req, res, log, error }) => {
   let userData;
 
   try {
-    // Appwrite parses the body automatically if Content-Type is application/json.
-    // If not, the raw payload is in req.payload. We handle both.
-    const body = (req.body && Object.keys(req.body).length > 0) 
-      ? req.body 
-      : JSON.parse(req.payload || '{}');
+    // Handle different content types
+    let body;
+    
+    if (req.headers['content-type'] === 'application/json') {
+      // JSON content type
+      body = (req.body && Object.keys(req.body).length > 0) 
+        ? req.body 
+        : JSON.parse(req.payload || '{}');
+    } else if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+      // Form URL encoded content type
+      body = req.body;
+    } else {
+      // Try to parse as JSON from payload
+      body = JSON.parse(req.payload || '{}');
+    }
       
     userData = body;
 
     console.log('👤 Extracted user data:', userData);
+    console.log('🔍 Request body type:', typeof req.body);
+    console.log('🔍 Request payload type:', typeof req.payload);
 
     if (!userData || !userData.userId) {
       console.error('❌ Validation failed: User data not found in request');
+      console.error('❌ userData:', userData);
       error('Validation failed: User data not found in request body or payload.');
       return res.json({ ok: false, message: 'User data is required.' }, 400);
     }
