@@ -23,8 +23,8 @@ export default async ({ req, res, log, error }) => {
         ? req.body 
         : JSON.parse(req.payload || '{}');
     } else if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-      // Form URL encoded content type
-      body = req.body;
+      // Form URL encoded content type - parse the JSON string
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     } else {
       // Try to parse as JSON from payload
       body = JSON.parse(req.payload || '{}');
@@ -35,6 +35,7 @@ export default async ({ req, res, log, error }) => {
     console.log('👤 Extracted user data:', userData);
     console.log('🔍 Request body type:', typeof req.body);
     console.log('🔍 Request payload type:', typeof req.payload);
+    console.log('🔍 userData type:', typeof userData);
 
     if (!userData || !userData.userId) {
       console.error('❌ Validation failed: User data not found in request');
