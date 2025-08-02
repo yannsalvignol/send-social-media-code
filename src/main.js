@@ -6,19 +6,19 @@ export default async ({ req, res, log, error }) => {
   let userData;
 
   try {
-    // Handle different content types
+
     let body;
     
     if (req.headers['content-type'] === 'application/json') {
-      // JSON content type
+
       body = (req.body && Object.keys(req.body).length > 0) 
         ? req.body 
         : JSON.parse(req.payload || '{}');
     } else if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-      // Form URL encoded content type - parse the JSON string
+
       body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     } else {
-      // Try to parse as JSON from payload
+ 
       body = JSON.parse(req.payload || '{}');
     }
       
@@ -32,8 +32,7 @@ export default async ({ req, res, log, error }) => {
     error('Failed to parse request body/payload.', e);
     return res.json({ ok: false, message: 'Invalid request format.' }, 400);
   }
-  
-  // Setup Appwrite client
+
   const client = new Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT)
     .setProject(process.env.APPWRITE_PROJECT_ID)
@@ -41,15 +40,13 @@ export default async ({ req, res, log, error }) => {
 
   const databases = new Databases(client);
   const users = new Users(client);
-  
-  // Setup Resend client
+ 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    // Get user details from Appwrite
+
     const user = await users.get(userData.userId);
-    
-    // Get user document to get social media information
+  
     const userDocs = await databases.listDocuments(
       process.env.APPWRITE_DATABASE_ID,
       process.env.APPWRITE_USER_COLLECTION_ID,
@@ -65,21 +62,21 @@ export default async ({ req, res, log, error }) => {
     const socialMedia = userData.socialMedia || userDoc.social_media;
     const socialMediaUsername = userData.socialMediaUsername || userDoc.social_media_username;
     
-    // Generate a new 6-digit code
+ 
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Update the user document with the new code
+   
     await databases.updateDocument(
       process.env.APPWRITE_DATABASE_ID,
       process.env.APPWRITE_USER_COLLECTION_ID,
       userDoc.$id,
       {
         social_media_number: newCode,
-        social_media_number_correct: false // Reset verification status
+        social_media_number_correct: false 
       }
     );
 
-    // Send the verification code email using Resend
+  
     const emailResult = await resend.emails.send({
       from: 'verification@email.cherrizbox.com',
       to: 'yannsalvignol@gmail.com',
