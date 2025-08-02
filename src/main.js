@@ -62,19 +62,13 @@ export default async ({ req, res, log, error }) => {
     const socialMedia = userData.socialMedia || userDoc.social_media;
     const socialMediaUsername = userData.socialMediaUsername || userDoc.social_media_username;
     
- 
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // Use the existing code from the database
+    const existingCode = userDoc.social_media_number;
     
-   
-    await databases.updateDocument(
-      process.env.APPWRITE_DATABASE_ID,
-      process.env.APPWRITE_USER_COLLECTION_ID,
-      userDoc.$id,
-      {
-        social_media_number: newCode,
-        social_media_number_correct: false 
-      }
-    );
+    if (!existingCode) {
+      error('No verification code found for user.');
+      return res.json({ ok: false, message: 'No verification code found.' }, 404);
+    }
 
   
     const emailResult = await resend.emails.send({
@@ -86,7 +80,7 @@ export default async ({ req, res, log, error }) => {
         <p>User: ${user.name || 'Unknown'} (${user.email})</p>
         <p>Platform: ${socialMedia}</p>
         <p>Username: @${socialMediaUsername}</p>
-        <p><strong>Verification Code: ${newCode}</strong></p>
+        <p><strong>Verification Code: ${existingCode}</strong></p>
         <p>This code was requested by the user for social media verification.</p>
       `,
     });
@@ -94,7 +88,7 @@ export default async ({ req, res, log, error }) => {
     return res.json({ 
       ok: true, 
       message: 'Verification code sent successfully',
-      code: newCode
+      code: existingCode
     });
 
   } catch (e) {
