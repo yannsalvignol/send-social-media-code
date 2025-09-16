@@ -50,7 +50,7 @@ export default async ({ req, res, log, error }) => {
     const userDocs = await databases.listDocuments(
       process.env.APPWRITE_DATABASE_ID,
       process.env.APPWRITE_USER_COLLECTION_ID,
-      [Query.equal('creatoraccountid', userData.userId)]
+      [Query.equal('creatorId', userData.userId)]
     );
 
     if (userDocs.documents.length === 0) {
